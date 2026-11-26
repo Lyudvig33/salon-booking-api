@@ -56,6 +56,26 @@ curl -i -X POST http://localhost:3000/appointments \
 Dates must include a time zone offset (`+02:00` or `Z`). Responses return them in
 UTC.
 
+### `PATCH /appointments/:id/status`
+
+```bash
+curl -i -X PATCH http://localhost:3000/appointments/1/status \
+  -H 'X-Salon-Id: 1' -H 'Content-Type: application/json' \
+  -d '{"status": "done"}'
+```
+
+Allowed transitions: `booked` → `done` and `booked` → `cancelled`.
+
+| Status | When |
+|---|---|
+| 200 | The status is changed; the response is the appointment |
+| 400 | Invalid header, id or status value |
+| 404 | No such appointment, or it belongs to another salon |
+| 409 | Any other transition |
+
+The update itself has the condition `status = 'booked'`, so of two simultaneous
+changes only one succeeds.
+
 ## Project structure
 
 ```
@@ -100,11 +120,11 @@ test/              end-to-end tests
    A "select, then insert" check in the application would not be enough: two
    simultaneous requests could both see a free slot.
 
-2. **A lock makes the response predictable.** Before inserting, the transaction
-   takes `pg_advisory_xact_lock(salonId, masterId)`, so inserts for one master run
-   one at a time. Without it, simultaneous inserts sometimes waited for each other
-   inside the constraint check, PostgreSQL aborted one with a deadlock (`40P01`),
-   and the client got 500 instead of 409.
+2. **A lock makes the response predictable.** Creating an appointment and changing
+   its status first take `pg_advisory_xact_lock(salonId, masterId)` in a
+   transaction, so writes for one master run one at a time. Without it,
+   simultaneous writes sometimes waited for each other inside the constraint check,
+   PostgreSQL aborted one with a deadlock (`40P01`), and the client got 500.
 
 ## AI usage
 
@@ -125,6 +145,10 @@ Checks run by the AI:
   the first run, but when the concurrency test was repeated, 7 of 30 runs failed:
   a request got 500 because of a deadlock. The AI had suspected this while
   planning, reproduced it, and added the advisory lock: 0 failures in 50 runs.
+- The lock was first added only to creation. A temporary stress test that marked
+  appointments `done` while other requests booked the same time produced 98
+  deadlocks between the `UPDATE` and the `INSERT`. After the status change took the
+  same lock: 0 deadlocks in 1500 rounds.
 
 ### What I checked myself
 
