@@ -5,6 +5,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from '../config/typeorm.config.js';
 import { validationPipe } from '../validation/validation.pipe.js';
 import { AppointmentsModule } from './appointments/appointments.module.js';
+import { ReportsModule } from './reports/reports.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { AppointmentsModule } from './appointments/appointments.module.js';
       useFactory: typeOrmConfig,
     }),
     AppointmentsModule,
+    ReportsModule,
   ],
   // Registered here (not in main.ts) so that tests get the same validation.
   providers: [{ provide: APP_PIPE, useValue: validationPipe }],
