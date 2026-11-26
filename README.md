@@ -39,6 +39,9 @@ start from scratch: `docker compose down -v`.
 Every request must have an `X-Salon-Id` header (a positive integer): the salon of
 the current user.
 
+Swagger UI is available at http://localhost:3000/docs (an addition beyond the task
+requirements, for trying the endpoints by hand).
+
 ### `POST /appointments`
 
 ```bash
@@ -82,7 +85,7 @@ changes only one succeeds.
 src/
   main.ts, app.module.ts
   core/
-    config/        TypeORM configuration
+    config/        TypeORM and Swagger configuration
     decorators/    @SalonId()
     dtos/          request validation
     entities/      TypeORM entities
