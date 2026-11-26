@@ -203,3 +203,4 @@ Checks run by the AI:
 - The revenue report was empty for a month without `done` appointments, and showed
   `revenueCents: 3000`, `count: 1` for December after an appointment was marked
   `done`.
+- A second appointment for the same master at the same time was rejected with 409.
